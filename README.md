@@ -232,4 +232,3 @@ ChromaDB is initialized automatically during runtime.
 streamlit run app.py
 ```
 
-
