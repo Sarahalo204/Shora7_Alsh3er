@@ -2,8 +2,8 @@
 
 An advanced Arabic Natural Language Processing (NLP) system specialized in analyzing, explaining, and parsing (**إعراب**) the **Ten Arabic Mu'allaqat** using two RAG architectures:
 
-- **Standard RAG (Vector-based)**
-- **Hybrid GraphRAG (Knowledge Graph-based)**
+- **Standard RAG (Hybrid Vector & BM25 with Reranker)**
+- **Hybrid GraphRAG (Knowledge Graph-based with RRF)**
 
 ---
 
@@ -21,14 +21,15 @@ The system follows a complete pipeline starting from dataset loading and embeddi
 ```mermaid
 graph TD
     A[Dataset: Curated & Hosted on HuggingFace] --> B[Phase 1: Loading via HuggingFace Datasets API]
-    B --> C[Phase 2: Embedding Generation via Sarah0001/Arabic_embed_model]
-    C --> D1[Standard RAG Path: Vector Storage - ChromaDB]
+    B --> C[Phase 2: Embedding Generation via Arabic Embedding Models]
+    C --> D1[Standard RAG Path: Hybrid Storage - ChromaDB + BM25]
     C --> D2[GraphRAG Path: Knowledge Graph Storage - Neo4j AuraDB]
     D1 --> E[Phase 3: Multi-Pipeline Retrieval]
     D2 --> E
-    E --> F[Hybrid Search: Vector + Full-Text + Graph Search + Reranking]
-    F --> G[Phase 4: Response Generation - GPT-4o Mini]
+    E --> F[Hybrid Search: Vector + Full-Text + Graph Search + RRF/BGE Reranking]
+    F --> G[Phase 4: Response Generation - GPT-4o Mini Strict Anti-Hallucination]
     G --> H[Phase 5: Evaluation - RAGAS Framework & LLM-as-a-Judge]
+
 ```
 
 ---
@@ -36,13 +37,14 @@ graph TD
 ## 🛠️ Technical Stack
 
 * **Large Language Model (LLM):** OpenAI `gpt-4o-mini` for contextual answer generation and evaluation.
-* **Embedding Model:** `Sarah0001/Arabic_embed_model`, a specialized Arabic sentence transformer for semantic understanding.
+* **Embedding Models:** `Sarah0001/Arabic_embed_model` and `Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2` for semantic understanding.
+* **Retrieval & Reranking:** `BAAI/bge-reranker-base` (CrossEncoder) and `BM25Okapi` for lexical search.
 * **Databases:**
-  * **ChromaDB:** Vector database for semantic search.
-  * **Neo4j AuraDB:** Graph database for storing grammatical, semantic, and vocabulary relationships.
+* **ChromaDB:** Vector database for semantic search.
+* **Neo4j AuraDB:** Graph database for storing grammatical, semantic, and vocabulary relationships.
 
 
-* **Frameworks & Tools:** Streamlit, LangChain, Datasets, and RAGAS.
+* **Frameworks & Tools:** Streamlit, LangChain, Datasets, RAGAS, `sentence-transformers`, and `rank-bm25`.
 
 ---
 
@@ -92,6 +94,7 @@ MERGE (v)-[:HAS_VOCABULARY]->(vo)
 
 SET v.embedding = $embedding
 
+
 ```
 
 ---
@@ -101,22 +104,17 @@ SET v.embedding = $embedding
 The **GraphRAG** pipeline uses a hybrid retrieval system combined with custom reranking to improve answer quality and relevance.
 
 ### Retrieval Steps
-1. **Vector Search**  
-   Queries the `verse_vector` index using semantic similarity between embeddings.
 
-2. **Full-Text Search**  
-   Queries the `verse_text` index to retrieve exact keyword matches from classical Arabic poetry.
+1. **Vector Search** Queries the `verse_vector` index using semantic similarity between embeddings.
+2. **Full-Text Search** Queries the `verse_text` index to retrieve exact keyword matches from classical Arabic poetry.
+3. **Graph Search** Uses the graph structure to retrieve connected meaning, grammar, and vocabulary nodes.
+4. **Weighted RRF Reranking** Combines results from all retrieval methods using Reciprocal Rank Fusion (RRF) and reranks them using custom weights:
 
-3. **Graph Search**  
-   Uses the graph structure to retrieve connected meaning, grammar, and vocabulary nodes.
-
-4. **Weighted Reranking**  
-   Combines results from all retrieval methods and reranks them using custom weights:
 * Vector Search → `1.0`
 * Keyword Search → `1.2`
-* Graph Search → `1.1`
+* Graph Search → `1.2`
 
-The final top-ranked contexts are then passed to the LLM for answer generation.
+The final top-ranked contexts are then passed to the LLM for answer generation using strict anti-hallucination system prompts.
 
 ---
 
@@ -187,6 +185,7 @@ A secondary `gpt-4o-mini` model acts as an evaluation judge for generated respon
 
 ```bash
 pip install -r requirements.txt
+
 ```
 
 ---
@@ -201,12 +200,16 @@ OPENAI_API_KEY="your-openai-api-key"
 OPENAI_MODEL="gpt-4o-mini"
 
 EMBEDDING_MODEL="Sarah0001/Arabic_embed_model"
+EMBEDDING_MODEL2="Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2"
+
+DATASET="SarahALo/The-Ten-Muallaqat-Dataset"
 
 NEO4J_URI="neo4j+s://your-instance.databases.neo4j.io"
 
-NEO4J_USERNAME="neo4j"
+NEO4J_USERNAME="your-neo4j-username"
 
 NEO4J_PASSWORD="your-neo4j-password"
+
 
 ```
 
@@ -218,6 +221,7 @@ Run:
 
 ```bash
 python src/PoetryGraphPipeline.py
+
 ```
 
 This indexes the HuggingFace dataset into Neo4j AuraDB.
@@ -229,6 +233,8 @@ ChromaDB is initialized automatically during runtime.
 ### 4. Run the Streamlit Dashboard
 
 ```bash
-streamlit run app.py
+streamlit run app2.py
+
 ```
 
+```
