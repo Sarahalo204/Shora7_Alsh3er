@@ -15,6 +15,11 @@ from src.RAGEvaluationSystem import RAGEvaluationSystem
 
 from views import CSS_STYLE, render_home, render_evaluation, render_details
 
+import asyncio
+if sys.platform != 'win32':
+    asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
+    
+
 load_dotenv()
 
 EMBED_MODEL    = os.getenv("EMBEDDING_MODEL2", "Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2")
