@@ -1,3 +1,6 @@
+import nest_asyncio
+nest_asyncio.apply = lambda *args, **kwargs: None
+
 import streamlit as st
 import pandas as pd
 import os
@@ -14,11 +17,6 @@ from src.RagGraph import GraphRag
 from src.RAGEvaluationSystem import RAGEvaluationSystem
 
 from views import CSS_STYLE, render_home, render_evaluation, render_details
-
-import asyncio
-if sys.platform != 'win32':
-    asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
-    
 
 load_dotenv()
 
