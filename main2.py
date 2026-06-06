@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from src.DataManager import DataManager
+from src.DataManager2 import DataManager2
 from src.RAGSystem import RAGSystem
 from src.RAGEvaluationSystem import RAGEvaluationSystem
 load_dotenv()
@@ -14,7 +14,7 @@ COLLECTION_NAME = "muallaqat_collection"
 EVAL_PATH       = "cache/eval_data.xlsx"
 
 # --------------------------------------------------------
-data_manager = DataManager(
+data_manager = DataManager2(
     dataset_name=DATASET,  
     db_path=CHROMA_PATH,
     collection_name=COLLECTION_NAME,
