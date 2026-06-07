@@ -20,15 +20,24 @@ The system follows a complete pipeline starting from dataset loading and embeddi
 
 ```mermaid
 graph TD
-    A[Dataset: Curated & Hosted on HuggingFace] --> B[Phase 1: Loading via HuggingFace Datasets API]
-    B --> C[Phase 2: Embedding Generation via Arabic Embedding Models]
-    C --> D1[Standard RAG Path: Hybrid Storage - ChromaDB + BM25]
-    C --> D2[GraphRAG Path: Knowledge Graph Storage - Neo4j AuraDB]
-    D1 --> E[Phase 3: Multi-Pipeline Retrieval]
-    D2 --> E
-    E --> F[Hybrid Search: Vector + Full-Text + Graph Search + RRF/BGE Reranking]
-    F --> G[Phase 4: Response Generation - GPT-4o Mini Strict Anti-Hallucination]
-    G --> H[Phase 5: Evaluation - RAGAS Framework & LLM-as-a-Judge]
+    A[Dataset: SarahALo/The-Ten-Muallaqat-Dataset] --> B[Phase 1: Loading via HuggingFace]
+    B --> C[Phase 2: Embedding Generation]
+
+    %% مساران منفصلان تماماً
+    C --> D1[Standard RAG Path: ChromaDB + BM25]
+    C --> D2[GraphRAG Path: Neo4j AuraDB]
+
+    %% مسار البحث التقليدي
+    D1 --> E1[Phase 3A: Hybrid Search <br> Vector + BM25 + BGE Reranker]
+    E1 --> F1[Phase 4A: Response Generation <br> GPT-4o Mini]
+
+    %% مسار البحث المعرفي
+    D2 --> E2[Phase 3B: Graph Hybrid Search <br> Vector + Full-Text + Graph + RRF]
+    E2 --> F2[Phase 4B: Response Generation <br> GPT-4o Mini]
+
+    %% مرحلة التقييم التي تقارن بين النتيجتين المستقلتين
+    F1 --> G[Phase 5: Evaluation & Comparison <br> RAGAS Framework & LLM-as-a-Judge]
+    F2 --> G
 
 ```
 
